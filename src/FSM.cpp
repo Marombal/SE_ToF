@@ -9,7 +9,7 @@ void set_state(fsm_t &fsm, int state_new){
   } 
 }
 
-void Dimming_calc_next_state(fsm_t &fsm, float distance_down, float distance_up){
+void Dimming_calc_next_state(fsm_t &fsm, fsm_t& EM, fsm_t& CLAP, float distance_down, float distance_up){
     
     boolean s_down = ((distance_down * 100) < 15);
     boolean s_up = ((distance_up * 100) < 15);
@@ -19,8 +19,12 @@ void Dimming_calc_next_state(fsm_t &fsm, float distance_down, float distance_up)
     Serial.println(s_up);
 
     int Brightness = 0;
+
+    if(EM.state == EM_OFF || CLAP.state == OFF){
+        fsm.state == IDLE;
+    }
     
-    if((fsm.state == IDLE) && (s_down) && (!s_up)){
+    else if((fsm.state == IDLE) && (s_down) && (!s_up)){
         fsm.state_new = S_DOWN;
     }
     else if((fsm.state == IDLE) && (s_up) && (!s_down)){
@@ -65,6 +69,73 @@ int Dimming_calc_outputs(fsm_t& fsm, int brightness){
     }
 
     return brightness;
+}
+
+
+void Clap_calc_next_state(fsm_t &fsm, fsm_t &EM, int clap){
+    if(EM.state == EM_OFF){
+        fsm.state_new = OFF;
+    }
+
+
+    else if((fsm.state == OFF) && (clap)){
+        fsm.state_new = CLAP_ON;
+    }
+
+    else if((fsm.state == CLAP_ON) && (fsm.tis > 300)){
+        fsm.state_new = OFF;
+    }
+    else if((fsm.state == CLAP_ON) && (clap)){
+        fsm.state_new = CLAP_ON2;
+    }
+
+    else if((fsm.state == CLAP_ON2) && (clap)){
+        fsm.state_new = OFF;
+    }
+    else if((fsm.state == CLAP_ON2) && (fsm.tis > 300)){
+        fsm.state_new = ON;
+    }
+
+    else if((fsm.state == ON) && (clap)){
+        fsm.state_new = CLAP_OFF;
+    }
+
+    else if((fsm.state == CLAP_OFF) && (clap)){
+        fsm.state_new = CLAP_OFF2;
+    }
+    else if((fsm.state == CLAP_OFF) && (fsm.tis > 300)){
+        fsm.state_new = ON;
+    }
+
+    else if((fsm.state == CLAP_OFF2) && (fsm.tis > 300)){
+        fsm.state_new = OFF;
+    }    
+    else if((fsm.state == CLAP_OFF2) && (clap)){
+        fsm.state_new = ON;
+    }
+}
+
+
+int Clap_calc_outputs(fsm_t& fsm){
+    return 0;
+}
+
+void Emergency_calc_next_state(fsm_t &fsm, int EmergencySwitch){
+    if((fsm.state == EM_ON) && (EmergencySwitch)){
+        fsm.state_new = EM_OFF;
+    }
+    else if((fsm.state == EM_OFF) && (EmergencySwitch == 0)){
+        fsm.state_new = EM_ON;
+    }
+}
+
+int Emergency_calc_outputs(fsm_t& fsm){
+    if(fsm.state == EM_ON){
+        return 1;
+    }
+    if(fsm.state == EM_OFF){
+        return 0;
+    }
 }
 
 

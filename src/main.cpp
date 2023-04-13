@@ -93,6 +93,7 @@ void setup()
 
   set_state(Dimming, IDLE);
   Brightness = 255;
+  LED_STATE = 1;
 }
 
 #define CYW43_WL_GPIO_LED_PIN 0
@@ -151,8 +152,13 @@ void loop()
     Serial.print("State: ");  Serial.println(Dimming.state);
     Serial.print("Brightness: ");  Serial.println(Brightness);   
     
-
-    analogWrite(LED, Brightness); //14-22
+    if(LED_STATE == 1){
+      analogWrite(LED, Brightness); //14-22
+    }
+    else{
+      analogWrite(LED, 0);
+    }
+    
   }
 }
 
