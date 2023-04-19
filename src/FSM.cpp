@@ -133,9 +133,10 @@ int Emergency_calc_outputs(fsm_t& fsm){
     if(fsm.state == EM_ON){
         return 1;
     }
-    if(fsm.state == EM_OFF){
+    else if(fsm.state == EM_OFF){
         return 0;
     }
+    return -1;
 }
 
 

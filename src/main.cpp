@@ -31,6 +31,8 @@ unsigned long currentMicros, previousMicros;
 int loop_count;
 
 fsm_t Dimming;
+fsm_t Clap;
+fsm_t Emergency;
 
 void setup() 
 {
@@ -92,6 +94,8 @@ void setup()
 
 
   set_state(Dimming, IDLE);
+  set_state(Clap, 0);
+  set_state(Emergency, 0);
   Brightness = 255;
   LED_STATE = 1;
 }
@@ -134,7 +138,7 @@ void loop()
     ToF2.startReadRangeMillimeters();
 
     /* calculate next state */
-    Dimming_calc_next_state(Dimming, distance, distance2); // distance -> distance_down; distance2 -> distance_up
+    Dimming_calc_next_state(Dimming, Emergency, Clap, distance, distance2); // distance -> distance_down; distance2 -> distance_up
 
     /* update state */
     set_state(Dimming, Dimming.state_new);
