@@ -94,8 +94,8 @@ void setup()
 
 
   set_state(Dimming, IDLE);
-  set_state(Clap, 0);
-  set_state(Emergency, 0);
+  set_state(Clap, CLAP_ON);
+  set_state(Emergency, EM_ON);
   Brightness = 255;
   LED_STATE = 1;
 }
