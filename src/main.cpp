@@ -31,7 +31,7 @@ int LED_state;
 unsigned long interval;
 unsigned long currentMicros, previousMicros;
 int loop_count;
-int SIGNAL;
+int SIGNAL, CLAP, EMERG;
 
 fsm_t Dimming;
 fsm_t Clap;
@@ -139,6 +139,9 @@ void loop()
     // Read Sincronization Signal
     SIGNAL = digitalRead(Signal);
 
+    // Read the CLAP and EMERCENGY SIMULATION signals
+    CLAP = digitalRead(4);
+    EMERG = digitalRead(5);
 
     // Start new distance measure
     ToF1.startReadRangeMillimeters(); 
@@ -148,12 +151,20 @@ void loop()
 
     /* calculate next state */
     Dimming_calc_next_state(Dimming, Emergency, Clap, distance, distance2); // distance -> distance_down; distance2 -> distance_up
+    Clap_calc_next_state(Clap, Emergency, CLAP);
+    Emergency_calc_next_state(Emergency, EMERG);
+    PWM_calc_next_state(PWM, Emergency, Clap, Brightness, SIGNAL);
 
     /* update state */
     set_state(Dimming, Dimming.state_new);
+    set_state(Clap, Clap.state_new);
+    set_state(Emergency, Emergency.state_new);
+    set_state(PWM, PWM.state_new);
 
     /* Actions set by the current state */
     Brightness = Dimming_calc_outputs(Dimming, Brightness);
+    LED_STATE = PWM_calc_outputs(PWM);
+
 
     /* Outputs */
     outputs();
