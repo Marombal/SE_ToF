@@ -139,6 +139,27 @@ int Emergency_calc_outputs(fsm_t& fsm){
     return -1;
 }
 
+void PWM_calc_next_state(fsm_t &fsm, fsm_t &EM, fsm_t &CLAP, int brightness, int signal){
+
+    int time = 10 * brightness / 255;
+
+    if((fsm.state == 0) && (CLAP.state == EM_ON) && (EM.state == ON) && (signal)){
+        fsm.state_new = 1;
+    }
+    else if((fsm.state == 1) && (CLAP.state != EM_ON) && (EM.state != ON) && (fsm.tis > time)){
+        fsm.state_new = 0;
+    }
+}
+
+int PWM_calc_outputs(fsm_t &fsm){
+    if(fsm.state == 0){
+        return 0;
+    }
+    else if(fsm.state == 1){
+        return 1;
+    }
+    return -1;
+}
 
 
 void outputs(){

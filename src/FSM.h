@@ -28,5 +28,8 @@ int Clap_calc_outputs(fsm_t& fsm);
 void Emergency_calc_next_state(fsm_t &fsm, int EmergencySwitch);
 int Emergency_calc_outputs(fsm_t& fsm);
 
+/* PWM CONTROL */
+void PWM_calc_next_state(fsm_t &fsm, fsm_t &EM, fsm_t &CLAP, int brightness, int signal);
+int PWM_calc_outputs(fsm_t &fsm);
 
 #endif

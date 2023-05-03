@@ -16,6 +16,8 @@
 
 #define ADC_Pin 28
 
+#define Signal 3
+
 
 
 VL53L0X ToF1;
@@ -29,10 +31,12 @@ int LED_state;
 unsigned long interval;
 unsigned long currentMicros, previousMicros;
 int loop_count;
+int SIGNAL;
 
 fsm_t Dimming;
 fsm_t Clap;
 fsm_t Emergency;
+fsm_t PWM;
 
 void setup() 
 {
@@ -42,13 +46,14 @@ void setup()
   pinMode(LED, OUTPUT);
   
   pinMode(ADC_Pin, INPUT);
+  pinMode(Signal, INPUT);
 
   delay(1000);
   digitalWrite(XSHUT1, LOW);
   digitalWrite(XSHUT2, LOW);
   digitalWrite(VDown, HIGH);
 
-  interval = 40 * 1000;
+  interval = 1 * 1000;
 
   Serial.begin(115200);
 
@@ -96,6 +101,7 @@ void setup()
   set_state(Dimming, IDLE);
   set_state(Clap, CLAP_ON);
   set_state(Emergency, EM_ON);
+  set_state(PWM, 0);
   Brightness = 255;
   LED_STATE = 1;
 }
@@ -111,11 +117,12 @@ void loop()
   if (currentMicros - previousMicros >= interval) { 
     previousMicros = currentMicros;
     
-    Serial.println(analogRead(ADC_Pin));
+    //Serial.println(analogRead(ADC_Pin));
     
     // Update timers
     unsigned long cur_time = millis();
     Dimming.tis = cur_time - Dimming.tes;
+    PWM.tis = cur_time - PWM.tes;
     Serial.println(Dimming.tis);
    
     // Read Sensors (ToF)
@@ -129,6 +136,8 @@ void loop()
       distance2 = ToF2.readRangeMillimeters() * 1e-3;
     }
 
+    // Read Sincronization Signal
+    SIGNAL = digitalRead(Signal);
 
 
     // Start new distance measure
