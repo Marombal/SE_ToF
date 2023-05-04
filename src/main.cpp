@@ -18,6 +18,12 @@
 
 #define Signal 3
 
+#define S_CLAP 27
+#define S_EM 26
+
+int sclap, prev_sclap;
+int sem, prev_sem;
+
 
 
 VL53L0X ToF1;
@@ -47,6 +53,9 @@ void setup()
   
   pinMode(ADC_Pin, INPUT);
   pinMode(Signal, INPUT);
+
+  pinMode(S_CLAP, INPUT);
+  pinMode(S_EM, INPUT);
 
   delay(1000);
   digitalWrite(XSHUT1, LOW);
@@ -99,7 +108,7 @@ void setup()
 
 
   set_state(Dimming, IDLE);
-  set_state(Clap, CLAP_ON);
+  set_state(Clap, ON);
   set_state(Emergency, EM_ON);
   set_state(PWM, 0);
   Brightness = 255;
@@ -122,8 +131,14 @@ void loop()
     // Update timers
     unsigned long cur_time = millis();
     Dimming.tis = cur_time - Dimming.tes;
+    Clap.tis = cur_time - Clap.tes;
     PWM.tis = cur_time - PWM.tes;
     Serial.println(Dimming.tis);
+
+    prev_sclap = sclap;
+    prev_sem = sem;
+    sclap = !digitalRead(S_CLAP);
+    sem = !digitalRead(S_EM);
    
     // Read Sensors (ToF)
     if (ToF1.readRangeAvailable()) {
@@ -140,8 +155,8 @@ void loop()
     SIGNAL = digitalRead(Signal);
 
     // Read the CLAP and EMERCENGY SIMULATION signals
-    CLAP = digitalRead(4);
-    EMERG = digitalRead(5);
+    CLAP = (sclap && !prev_sclap);
+    EMERG = (sem);
 
     // Start new distance measure
     ToF1.startReadRangeMillimeters(); 
@@ -151,20 +166,35 @@ void loop()
 
     /* calculate next state */
     Dimming_calc_next_state(Dimming, Emergency, Clap, distance, distance2); // distance -> distance_down; distance2 -> distance_up
-    Clap_calc_next_state(Clap, Emergency, CLAP);
     Emergency_calc_next_state(Emergency, EMERG);
-    PWM_calc_next_state(PWM, Emergency, Clap, Brightness, SIGNAL);
+    Clap_calc_next_state(Clap, Emergency, CLAP);
+    
+    
+    //PWM_calc_next_state(PWM, Emergency, Clap, Brightness, SIGNAL);
 
     /* update state */
     set_state(Dimming, Dimming.state_new);
-    set_state(Clap, Clap.state_new);
     set_state(Emergency, Emergency.state_new);
-    set_state(PWM, PWM.state_new);
+    set_state(Clap, Clap.state_new);
+    
+    
+    //set_state(PWM, PWM.state_new);
 
     /* Actions set by the current state */
     Brightness = Dimming_calc_outputs(Dimming, Brightness);
-    LED_STATE = PWM_calc_outputs(PWM);
+    Clap_calc_outputs(Clap);
+    Emergency_calc_outputs(Emergency);
+    //LED_STATE = PWM_calc_outputs(PWM); 
 
+    if(Emergency.state == EM_OFF){
+      LED_STATE = 0;
+    }
+    else if(Clap.state == OFF){
+      LED_STATE = 0;
+    }
+    else if(Clap.state == ON && Emergency.state == EM_ON){
+      LED_STATE = 1;
+    }
 
     /* Outputs */
     outputs();
@@ -173,8 +203,12 @@ void loop()
     /* ToFs*/
     Serial.print(" Dist ToF1: ");    Serial.println(distance*100, 3);
     Serial.print(" Dist ToF2 : ");   Serial.println(distance2*100, 3);
-    Serial.print("State: ");  Serial.println(Dimming.state);
+    Serial.print("State DIMMING: ");  Serial.println(Dimming.state);
     Serial.print("Brightness: ");  Serial.println(Brightness);   
+    Serial.print("State CLAP: ");  Serial.println(Clap.state);
+    Serial.print("CLAP: ");  Serial.println(CLAP);   
+    Serial.print("State EMERGENCY: ");  Serial.println(Emergency.state);
+    Serial.print("EM: ");  Serial.println(sem);   
     
     if(LED_STATE == 1){
       analogWrite(LED, Brightness); //14-22

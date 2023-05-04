@@ -15,8 +15,8 @@ void Dimming_calc_next_state(fsm_t &fsm, fsm_t& EM, fsm_t& CLAP, float distance_
     boolean s_up = ((distance_up * 100) < 15);
 
 
-    Serial.println(s_down);
-    Serial.println(s_up);
+    // Serial.println(s_down);
+    // Serial.println(s_up);
 
     int Brightness = 0;
 
@@ -117,6 +117,13 @@ void Clap_calc_next_state(fsm_t &fsm, fsm_t &EM, int clap){
 
 
 int Clap_calc_outputs(fsm_t& fsm){
+    if(fsm.state == ON){
+        LED_STATE = 1;
+    }
+    else if(fsm.state == OFF){
+        LED_STATE = 0;
+    }
+
     return 0;
 }
 
@@ -131,9 +138,11 @@ void Emergency_calc_next_state(fsm_t &fsm, int EmergencySwitch){
 
 int Emergency_calc_outputs(fsm_t& fsm){
     if(fsm.state == EM_ON){
+        LED_STATE = 1;
         return 1;
     }
     else if(fsm.state == EM_OFF){
+        LED_STATE = 0;
         return 0;
     }
     return -1;
